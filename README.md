@@ -8,6 +8,8 @@ Use CTRL + LEFT_DOUBLE_CLICK to reset.
 
 Hit ESCAPE to exit.
 
+Make sure to fetch fresh releases here: https://github.com/diresi/wimer/releases
+
 I intend to use this in (online) meetings when sharing my desktop. Folks will
 see their speaking time pass and - hopefully - finish soon enough.
 
