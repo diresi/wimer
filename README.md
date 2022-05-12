@@ -10,3 +10,5 @@ Hit ESCAPE to exit.
 
 I intend to use this in (online) meetings when sharing my desktop. Folks will
 see their speaking time pass and - hopefully - finish soon enough.
+
+![wimer on Windows 10](https://github.com/diresi/wimer/blob/main/docs/screenshot.png?raw=true)
