@@ -54,6 +54,7 @@ typedef struct {
 
     HBRUSH brush;
     HPEN pen;
+    HFONT font;
 } instance_data_t;
 
 static instance_data_t gdata;
@@ -259,11 +260,13 @@ LRESULT CALLBACK WindowProc(
             HDC hdc = BeginPaint(hwnd, &ps);
 
             struct {
-                HPEN pen;
                 COLORREF color;
+                HPEN pen;
+                HFONT font;
             } old = {
-                static_cast<HPEN>(SelectObject(hdc, gdata.pen)),
                 SetTextColor(hdc, TEXT_COLOR),
+                static_cast<HPEN>(SelectObject(hdc, gdata.pen)),
+                static_cast<HFONT>(SelectObject(hdc, gdata.font)),
             };
 
             auto total = max(1, gdata.period);
@@ -295,6 +298,7 @@ LRESULT CALLBACK WindowProc(
             MoveToEx(hdc, rc.left, rh, NULL);
             LineTo(hdc, rc.right, rh);
 
+            SelectObject(hdc, old.font);
             SelectObject(hdc, old.pen);
             SetTextColor(hdc, old.color);
             EndPaint(hwnd, &ps);
@@ -366,7 +370,14 @@ instance_data_t create_gui(HINSTANCE hInstance)
 
     HBRUSH brush = CreateSolidBrush(BRUSH_COLOR);
     HPEN pen = CreatePen(PS_SOLID, 1, LINE_COLOR);
-    return {hInstance, hwndMain, hwndLog, tmr, PERIOD_DEFAULT, 0, brush, pen};
+
+    HFONT font = static_cast<HFONT>(GetStockObject(DEFAULT_GUI_FONT));
+    LOGFONT logfont;
+    GetObject(font, sizeof(LOGFONT), &logfont);
+    logfont.lfHeight = 25;
+    font = CreateFontIndirect(&logfont);
+
+    return {hInstance, hwndMain, hwndLog, tmr, PERIOD_DEFAULT, 0, brush, pen, font};
 }
 
 LIBWIMER_EXPORT int CALLBACK libwimer_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
