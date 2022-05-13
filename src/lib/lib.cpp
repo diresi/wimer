@@ -38,8 +38,10 @@ const int WIDTH = 30;
 const int PERIOD_DEFAULT = 300;
 const int PERIOD_DELTA = 60;
 
-const COLORREF BG_COLOR = 0x007a71e4;    // Candy pink
+const COLORREF BG_COLOR = 0x00af91ff;    // Baker-Miller pink
 const COLORREF BRUSH_COLOR = 0x00a0e4a8; // Granny Smith apple
+const COLORREF LINE_COLOR = 0x0089858b;  // Taupe gray
+const COLORREF TEXT_COLOR = 0x00080808;  // Vampire black
 
 typedef struct {
     HINSTANCE hInstance;
@@ -51,6 +53,7 @@ typedef struct {
     INT elapsed;
 
     HBRUSH brush;
+    HPEN pen;
 } instance_data_t;
 
 static instance_data_t gdata;
@@ -255,6 +258,14 @@ LRESULT CALLBACK WindowProc(
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
+            struct {
+                HPEN pen;
+                COLORREF color;
+            } old = {
+                static_cast<HPEN>(SelectObject(hdc, gdata.pen)),
+                SetTextColor(hdc, TEXT_COLOR),
+            };
+
             auto total = max(1, gdata.period);
             auto elapsed = max(0, gdata.elapsed);
 
@@ -264,13 +275,28 @@ LRESULT CALLBACK WindowProc(
             rc.top += h;
 
             FillRect(hdc, &rc, gdata.brush);
+            MoveToEx(hdc, rc.left, rc.top, NULL);
+            LineTo(hdc, rc.right, rc.top);
 
             rc.top = ps.rcPaint.top;
-            SetTextColor(hdc, 0x00000000);
             SetBkMode(hdc, TRANSPARENT);
             auto info = s2w(to_string(gdata.period / 60));
-            DrawText(hdc, info.c_str(), info.size(), &rc, DT_SINGLELINE | DT_NOCLIP) ;
 
+            auto rh = DrawText(hdc, info.c_str(), info.size(), &rc, DT_SINGLELINE | DT_NOCLIP | DT_CENTER) ;
+
+            MoveToEx(hdc, rc.left, rh, NULL);
+            LineTo(hdc, rc.right, rh);
+
+            auto left = max(0, total - elapsed);
+            info = s2w(to_string(left / 60));
+            rc.top += rh;
+            rh += DrawText(hdc, info.c_str(), info.size(), &rc, DT_SINGLELINE | DT_NOCLIP | DT_CENTER) ;
+
+            MoveToEx(hdc, rc.left, rh, NULL);
+            LineTo(hdc, rc.right, rh);
+
+            SelectObject(hdc, old.pen);
+            SetTextColor(hdc, old.color);
             EndPaint(hwnd, &ps);
         }
 
@@ -339,7 +365,8 @@ instance_data_t create_gui(HINSTANCE hInstance)
     }
 
     HBRUSH brush = CreateSolidBrush(BRUSH_COLOR);
-    return {hInstance, hwndMain, hwndLog, tmr, PERIOD_DEFAULT, 0, brush};
+    HPEN pen = CreatePen(PS_SOLID, 1, LINE_COLOR);
+    return {hInstance, hwndMain, hwndLog, tmr, PERIOD_DEFAULT, 0, brush, pen};
 }
 
 LIBWIMER_EXPORT int CALLBACK libwimer_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCmdShow)
