@@ -4,7 +4,12 @@ project (wimer CXX)
 
 add_subdirectory(lib)
 
-add_executable(wimer main.cpp)
+IF (WIN32)
+    enable_language("RC")
+    set (_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/wimer.rc)
+ENDIF (WIN32)
+
+add_executable(wimer main.cpp ${_RESOURCES})
 target_link_libraries(wimer libwimer)
 
 # add_custom_command(TARGET wimer POST_BUILD
